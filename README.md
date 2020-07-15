@@ -1,2 +1,3 @@
 # todo-app
-use react, redux, firebase(auth, store), written by typescript.
+use react, redux, firebase(auth, store)
+written by typescript.
