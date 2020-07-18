@@ -10,7 +10,7 @@ type userDataType = {
 }
 
 const Profile:FC = (props: any) => {
-  const user = firebase.auth().currentUser;
+  const [user, setUser] = useState<any>(null);
   const [userData, setUserData] = useState<userDataType>({
     username: "no data",
     age: "no data",
@@ -18,13 +18,19 @@ const Profile:FC = (props: any) => {
   });
   const [ error, setError ] = useState(null);
 
+  firebase.auth().onAuthStateChanged((signInUser) => {
+    if (signInUser) {
+      setUser(signInUser);
+    }
+  });
+
   const logout = () => {
     firebase.auth().signOut()
     .then(() => {
       props.history.push("/");
     })
     .catch( error => {
-      console.log(error);
+      setError(error);
     })
   }
 
@@ -66,6 +72,11 @@ const Profile:FC = (props: any) => {
         <li><img width="200" height="200" src={ userData.photoURL || noImage } alt="profile"/></li>
       </ul>
       <p>{ error }</p>
+      <Button
+          href="/todo"
+          color="primary"
+          variant="contained"
+        >todo</Button>
       <Button
           onClick={ logout }
           color="primary"
