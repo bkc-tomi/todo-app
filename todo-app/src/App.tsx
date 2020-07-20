@@ -6,6 +6,7 @@ import Home from "./pages/home";
 import SignUp from "./pages/signup";
 import SignIn from "./pages/signin";
 import TodoList from "./pages/todolist";
+import ToolBar from "./pages/toolbar";
 
 class App extends React.Component {
   render() {
@@ -17,6 +18,7 @@ class App extends React.Component {
           <Route exact path="/signin" component={ SignIn } />
           <Route exact path="/todo" component={ TodoList } />
         </Switch>
+        <ToolBar />
       </BrowserRouter>
     );
   }

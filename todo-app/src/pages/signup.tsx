@@ -2,7 +2,7 @@ import React, { FC, useState } from "react";
 import firebase, { twitterProvider, googleProvider } from "../firebase";
 
 import { Formik, Form, Field } from "formik";
-import { Button } from "@material-ui/core";
+import { Button, makeStyles, createStyles } from "@material-ui/core";
 import { TextField } from "formik-material-ui";
 // @ts-ignore
 import * as Yup from "yup";
@@ -12,7 +12,24 @@ type value = {
   password: string,
 }
 
+const useStyles = makeStyles(() => createStyles({
+  container: {
+    position: "relative",
+    top: "50px",
+    width: "300px",
+    margin: "5px auto",
+  },
+  list: {
+    listStyle: "none",
+  },
+  btn: {
+    width: "100%",
+    margin: "10px auto",
+  }
+}));
+
 const SignUp: FC = (props: any) => {
+  const classes = useStyles();
   const [loading, setLoad] = useState(false);
 
   const handleSignUp = (value: value) => {
@@ -58,7 +75,7 @@ const SignUp: FC = (props: any) => {
   }
 
   return (
-    <div>
+    <div className={ classes.container }>
       <h3>新規登録</h3>
       <Formik
         initialValues={{email: "", password: ""}}
@@ -100,6 +117,7 @@ const SignUp: FC = (props: any) => {
                 variant="contained"
                 color="primary"
                 disabled={ loading }
+                className={ classes.btn }
               >
                 新規登録
               </Button>
@@ -108,13 +126,15 @@ const SignUp: FC = (props: any) => {
         }
       </Formik>
       <p>他のプロバイダでサインインする</p>
-      <Button 
+      <Button
+        className={ classes.btn }
         color="primary"
         variant="contained"
         onClick={ signInWithGoogle }
       >log in with Google</Button>
       <br />
       <Button 
+        className={ classes.btn }
         color="primary"
         variant="contained"
         onClick={ signInWithTwitter }

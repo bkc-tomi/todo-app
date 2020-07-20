@@ -1,59 +1,58 @@
 import React, { FC, useState, useEffect } from "react";
 import firebase, { db } from "../firebase";
-import { TextField, Button } from "@material-ui/core";
-
+import { TextField, Button,makeStyles, createStyles } from "@material-ui/core";
+import { userDataType } from "../types/usertype";
+import { todoType } from "../types/todoType";
+// @ts-ignore
+import { connect } from "react-redux";
+import { setTodos, changeTodos, deleteTodos, setIndex } from "../actions/tudoAction";
 import Todo from "./todo";
 
-type userDataType = {
-  username: string,
-  age: string | number,
-  photoURL: string,
-}
+const useStyles = makeStyles(() => createStyles({
+  container: {
+    position: "relative",
+    top: "50px",
+    margin: "auto",
+    width: "300px", 
+  },
+  textField: {
+    width: "70%",
+    margin: "5px auto",
+    marginRight: "10px",
+  },
+  savebtn: {
+    margin: "20px auto",
+    width: "90%",
+  }
+}))
 
-type todoType = {
-  title: string,
-  done: boolean,
+const ToDoList: FC<{
+  user: firebase.User | null,
+  userData: userDataType,
+  todos: todoType[],
   index: number,
-}
-
-const ToDoList: FC = (props: any) => {
-  const [user, setUser] = useState<any>(null);
-  const [userData, setUserData] = useState<userDataType>({
-    username: "no data",
-    age: "no data",
-    photoURL: "",
-  });
-  const [ index, setIndex ] = useState(0);
-  const [ error, setError ] = useState(null);
+  setTodos: Function,
+  changeTodos: Function,
+  deleteTodos: Function,
+  setIndex: Function,
+}> = ({ user, userData, todos, index, setTodos, changeTodos, deleteTodos, setIndex }) => {
+  const classes = useStyles();
   const [todo, setTodo ] = useState<todoType>({
     title: "",
     done: false,
     index: 0,
   });
-  const [todos, setTodos ] = useState<todoType[]>([]);
-  
-  useEffect(() => {
-    firebase.auth().onAuthStateChanged(activeUser => {
-      setUser(activeUser);
-      console.log("user");
-    });
-  }, []);
   useEffect(() => {
     if(user) {
-      db.collection("users").doc(user.uid).get()
-      .then(result => {
-        const dbUser = result.data();
-        if (dbUser) {
-          setUserData(dbUser as userDataType);
-          console.log("get data");
-        }
-      });
+      console.log("user loged in");
       db.collection("todos").doc(user.uid).get()
       .then(result => {
         const dbTodo = result.data();
+        console.log("get dbTodo");
         if (dbTodo) {
           setTodos(dbTodo.todos);
           setIndex(dbTodo.index);
+          console.log(dbTodo.todos);
         }
       });
     }
@@ -63,9 +62,9 @@ const ToDoList: FC = (props: any) => {
       if (a.index > b.index) return 1;
       return 0;
     });
-    setTodos(tempTodos);
-    console.log("effect!!");
-  },[ user ]);
+    changeTodos(tempTodos);
+  }, [ user ]);
+
 
 
   const saveTodoData = () => {
@@ -77,15 +76,7 @@ const ToDoList: FC = (props: any) => {
       alert("saved");
     }
   }
-  const logout = () => {
-    firebase.auth().signOut()
-    .then(() => {
-      props.history.push("/");
-    })
-    .catch( error => {
-      setError(error);
-    })
-  }
+
   const handleChange = (event: any) => {
     setTodo({
       title: event.target.value,
@@ -102,7 +93,7 @@ const ToDoList: FC = (props: any) => {
       if (a.index > b.index) return 1;
       return 0;
     });
-    setTodos(tempTodos);
+    changeTodos(tempTodos);
     setIndex(index + 1);
   }
 
@@ -113,7 +104,7 @@ const ToDoList: FC = (props: any) => {
       if (a.index > b.index) return 1;
       return 0;
     });
-    setTodos(tempTodos);
+    deleteTodos(tempTodos);
   }
 
   const changeCheck = (index: number) => {
@@ -127,21 +118,21 @@ const ToDoList: FC = (props: any) => {
         if (a.index > b.index) return 1;
         return 0;
       });
-      setTodos(tempTodos);
+      changeTodos(tempTodos);
     }
   }
 
   if (!user) {
     return (
-      <div>no user</div>
+      <div className={ classes.container }>no user</div>
     );
   }
   
   return (
-    <div>
+    <div className={ classes.container }>
       <h3>{ userData.username } のTodo</h3>
-      <p>{ error }</p>
       <TextField 
+        className={ classes.textField }
         value={ todo.title }
         onChange={ handleChange }
       />
@@ -150,6 +141,8 @@ const ToDoList: FC = (props: any) => {
         color="primary"
         variant="contained"
       >登録</Button>
+      <br/>
+      <br/>
         {
           todos.map( (todo ) => (
             <div>
@@ -162,18 +155,34 @@ const ToDoList: FC = (props: any) => {
             </div>
           ))
         }
+      <br />
+      <br />
       <Button
+        className={ classes.savebtn }
         onClick={ saveTodoData }
         color="primary"
         variant="contained"
       >保存</Button>
-      <Button
-        onClick={ logout }
-        color="primary"
-        variant="contained"
-      >ログアウト</Button>
     </div>
   );
 }
 
-export default ToDoList;
+const mapStateToProps = (state: any) => {
+  return {
+    user: state.user,
+    userData: state.userData,
+    todos: state.todos,
+    index: state.index,
+  };
+}
+
+const mapDispatchToProps = (dispatch: Function) => {
+  return {
+    setTodos: (todos: todoType[]) => dispatch(setTodos(todos)),
+    changeTodos: (todos: todoType[]) => dispatch(changeTodos(todos)),
+    deleteTodos: (todos: todoType[]) => dispatch(deleteTodos(todos)),
+    setIndex: (index: number) => dispatch(setIndex(index)),
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(ToDoList);

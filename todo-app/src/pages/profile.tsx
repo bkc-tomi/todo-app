@@ -1,89 +1,69 @@
-import React, { FC, useState, useEffect } from "react";
-import firebase, { db } from "../firebase";
-import { Button } from "@material-ui/core";
+import React, { FC } from "react";
+import { Button, makeStyles, createStyles } from "@material-ui/core";
 import noImage from "../images/noimage.png";
+import { userDataType } from "../types/usertype";
 
-type userDataType = {
-  username: string,
-  age: string | number,
-  photoURL: string,
-}
+// @ts-ignore
+import { connect } from "react-redux";
 
-const Profile:FC = (props: any) => {
-  const [user, setUser] = useState<any>(null);
-  const [userData, setUserData] = useState<userDataType>({
-    username: "no data",
-    age: "no data",
-    photoURL: "",
-  });
-  const [ error, setError ] = useState(null);
-
-  firebase.auth().onAuthStateChanged((signInUser) => {
-    if (signInUser) {
-      setUser(signInUser);
-    }
-  });
-
-  const logout = () => {
-    firebase.auth().signOut()
-    .then(() => {
-      props.history.push("/");
-    })
-    .catch( error => {
-      setError(error);
-    })
+const useStyles = makeStyles(() => createStyles({
+  container: {
+    position: "relative",
+    top: "50px",
+    width: "300px",
+    margin: "5px auto",
+  },
+  list: {
+    listStyle: "none",
+  },
+  btn: {
+    width: "100%",
   }
+}));
 
-  useEffect(() => {
-    if (user) {
-      db.collection("users").doc(user.uid).get()
-      .then(result => {
-        setUserData(result.data() as userDataType);
-      })
-      .catch(error => {
-        setError(error);
-      });  
-    }
-  }, [ user, userData, error ]);
+const Profile:FC<{
+  user: any,
+  userData: userDataType,
+}> = ({
+  user, userData
+}) => {
+  const classes = useStyles();
 
   if (!user) {
     return (
-      <div>
+      <div className={ classes.container }>
         no one signed in. please sign in or up first.
-        <Button
-            href="/signin"
-            color="primary"
-            variant="contained"
-          >サインイン</Button>
-          <Button
-            href="/signup"
-            color="primary"
-            variant="contained"
-          >サインアップ</Button>
       </div>
     );
   }
 
   return (
-    <div>
-      <ul>
+    <div className={ classes.container }>
+      <ul className={ classes.list }>
         <li>{ userData.username }</li>
         <li>{ userData.age }</li>
-        <li><img width="200" height="200" src={ userData.photoURL || noImage } alt="profile"/></li>
+        <li><img width="220" height="220" src={ userData.photoURL || noImage } alt="profile"/></li>
       </ul>
-      <p>{ error }</p>
       <Button
-          href="/todo"
-          color="primary"
-          variant="contained"
-        >todo</Button>
-      <Button
-          onClick={ logout }
-          color="primary"
-          variant="contained"
-        >ログアウト</Button>
+        className={ classes.btn }
+        href="/todo"
+        color="primary"
+        variant="contained"
+      >todo</Button>
     </div>
   );
 }
 
-export default Profile;
+const mapStateToProps = (state: any) => {
+  return {
+    user: state.user,
+    userData: state.userData,
+  };
+}
+
+const mapDispatchToProps = (dispatch: Function) => {
+  return {
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Profile);
