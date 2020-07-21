@@ -10,6 +10,7 @@ react-router-dom<br/>
 状態管理<br/>
 redux<br/>
 react-redux<br/>
+redux-thunk<br />
 <br/>
 UI作成<br/>
 @material-ui/core<br/>
@@ -26,6 +27,4 @@ firebase<br/>
 firebase-admin<br />
 
 if you get import error from typescript, use "@ts-ignore" before error code.
-
-
 
