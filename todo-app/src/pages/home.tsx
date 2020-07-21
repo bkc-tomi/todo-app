@@ -1,8 +1,7 @@
 import React, { FC } from "react";
 import Profile from "./profile";
 
-const Home: FC = (props: any) => {
-
+const Home: FC = () => {
   return (
     <div>
       <h3>Home</h3>

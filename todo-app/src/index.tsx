@@ -4,11 +4,13 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-import { createStore, combineReducers } from "redux";
+import { createStore, combineReducers, applyMiddleware } from "redux";
 // @ts-ignore
 import { Provider } from "react-redux";
+import thunk from "redux-thunk";
 import { userReducer, userDataReducer } from "./reducers/userReducer";
 import { todosReducer, indexReducer } from "./reducers/todoReducer";
+
 
 const reducers = combineReducers({
   user: userReducer,
@@ -17,7 +19,9 @@ const reducers = combineReducers({
   index: indexReducer,
 });
 
-const store = createStore(reducers);
+// @ts-ignore
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+const store = createStore(reducers, composeEnhancers(applyMiddleware(thunk)));
 
 ReactDOM.render(
   <React.StrictMode>

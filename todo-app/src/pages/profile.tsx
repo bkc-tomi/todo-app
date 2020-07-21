@@ -1,10 +1,12 @@
 import React, { FC } from "react";
 import { Button, makeStyles, createStyles } from "@material-ui/core";
 import noImage from "../images/noimage.png";
-import { userDataType } from "../types/usertype";
+import { userType, userDataType } from "../types/usertype";
+
 
 // @ts-ignore
 import { connect } from "react-redux";
+import { dLogin } from "../actions/userAction";
 
 const useStyles = makeStyles(() => createStyles({
   container: {
@@ -22,14 +24,15 @@ const useStyles = makeStyles(() => createStyles({
 }));
 
 const Profile:FC<{
-  user: any,
+  user: userType,
   userData: userDataType,
+  dLogin: Function,
 }> = ({
   user, userData
 }) => {
   const classes = useStyles();
 
-  if (!user) {
+  if (!user.logedIn) {
     return (
       <div className={ classes.container }>
         no one signed in. please sign in or up first.
@@ -39,11 +42,9 @@ const Profile:FC<{
 
   return (
     <div className={ classes.container }>
-      <ul className={ classes.list }>
-        <li>{ userData.username }</li>
-        <li>{ userData.age }</li>
-        <li><img width="220" height="220" src={ userData.photoURL || noImage } alt="profile"/></li>
-      </ul>
+      <p>{ userData.username }</p>
+      <p>{ userData.age }</p>
+      <img width="220" height="220" src={ userData.photoURL || noImage } alt="profile"/>
       <Button
         className={ classes.btn }
         href="/todo"
@@ -63,6 +64,7 @@ const mapStateToProps = (state: any) => {
 
 const mapDispatchToProps = (dispatch: Function) => {
   return {
+    dLogin: (userData: userDataType) => dispatch(dLogin(userData)),
   }
 }
 

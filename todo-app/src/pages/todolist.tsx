@@ -1,11 +1,11 @@
 import React, { FC, useState, useEffect } from "react";
-import firebase, { db } from "../firebase";
+import { db } from "../firebase";
 import { TextField, Button,makeStyles, createStyles } from "@material-ui/core";
-import { userDataType } from "../types/usertype";
+import { userType, userDataType } from "../types/usertype";
 import { todoType } from "../types/todoType";
 // @ts-ignore
 import { connect } from "react-redux";
-import { setTodos, changeTodos, deleteTodos, setIndex } from "../actions/tudoAction";
+import { setTodos, setIndex } from "../actions/todoAction";
 import Todo from "./todo";
 
 const useStyles = makeStyles(() => createStyles({
@@ -27,15 +27,13 @@ const useStyles = makeStyles(() => createStyles({
 }))
 
 const ToDoList: FC<{
-  user: firebase.User | null,
+  user: userType,
   userData: userDataType,
   todos: todoType[],
   index: number,
   setTodos: Function,
-  changeTodos: Function,
-  deleteTodos: Function,
   setIndex: Function,
-}> = ({ user, userData, todos, index, setTodos, changeTodos, deleteTodos, setIndex }) => {
+}> = ({ user, userData, todos, index, setTodos, setIndex }) => {
   const classes = useStyles();
   const [todo, setTodo ] = useState<todoType>({
     title: "",
@@ -43,9 +41,9 @@ const ToDoList: FC<{
     index: 0,
   });
   useEffect(() => {
-    if(user) {
+    if(user.user) {
       console.log("user loged in");
-      db.collection("todos").doc(user.uid).get()
+      db.collection("todos").doc(user.user.uid).get()
       .then(result => {
         const dbTodo = result.data();
         console.log("get dbTodo");
@@ -62,14 +60,14 @@ const ToDoList: FC<{
       if (a.index > b.index) return 1;
       return 0;
     });
-    changeTodos(tempTodos);
-  }, [ user ]);
+    setTodos(tempTodos);
+  }, [ user, setIndex, setTodos ]);
 
 
 
   const saveTodoData = () => {
-    if (user) {
-      db.collection("todos").doc(user.uid).set({
+    if (user.user) {
+      db.collection("todos").doc(user.user.uid).set({
         todos: todos,
         index: index,
       });
@@ -93,7 +91,7 @@ const ToDoList: FC<{
       if (a.index > b.index) return 1;
       return 0;
     });
-    changeTodos(tempTodos);
+    setTodos(tempTodos);
     setIndex(index + 1);
   }
 
@@ -104,7 +102,7 @@ const ToDoList: FC<{
       if (a.index > b.index) return 1;
       return 0;
     });
-    deleteTodos(tempTodos);
+    setTodos(tempTodos);
   }
 
   const changeCheck = (index: number) => {
@@ -118,7 +116,7 @@ const ToDoList: FC<{
         if (a.index > b.index) return 1;
         return 0;
       });
-      changeTodos(tempTodos);
+      setTodos(tempTodos);
     }
   }
 
@@ -179,8 +177,6 @@ const mapStateToProps = (state: any) => {
 const mapDispatchToProps = (dispatch: Function) => {
   return {
     setTodos: (todos: todoType[]) => dispatch(setTodos(todos)),
-    changeTodos: (todos: todoType[]) => dispatch(changeTodos(todos)),
-    deleteTodos: (todos: todoType[]) => dispatch(deleteTodos(todos)),
     setIndex: (index: number) => dispatch(setIndex(index)),
   };
 }

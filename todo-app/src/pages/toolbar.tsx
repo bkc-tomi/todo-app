@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from "react";
 import firebase, { db } from "../firebase";
 import { Button, makeStyles, createStyles } from "@material-ui/core";
-import { userDataType } from "../types/usertype";
+import { userType, userDataType } from "../types/usertype";
 
 // @ts-ignore
 import { connect } from "react-redux";
@@ -45,38 +45,50 @@ const useStyles = makeStyles(() => createStyles({
     float: "left",
     color: "#fff",
     marginRight: "10px",
+  },
+  titlelink: {
+    textDecoration: "none",
   }
 }));
 
 const ToolBar:FC<{
-  user: firebase.User | null,
+  user: userType,
   userData: userDataType,
   login: Function,
   logout: Function,
   dLogin: Function,
   dLogout: Function,
 }> = ({
-  user, userData, login, logout, dLogin, dLogout
+  user, userData, login, logout, dLogin, dLogout,
 }) => {
   const classes = useStyles();
   
   useEffect(() => {
-    firebase.auth().onAuthStateChanged(SignInUser => {
-      login(SignInUser);
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        login(user);
+      }
     });
-  }, []);
-
+  }, [ login ]);
+  
   useEffect(() => {
-    if (user) {
-      db.collection("users").doc(user.uid).get()
+    if (user.user) {
+      db.collection("users").doc(user.user.uid).get()
       .then(result => {
-        dLogin(result.data() as userDataType);
+        if (result.data()) {
+          dLogin(result.data());
+        } else {
+          if (user.user) {
+            const tempUserData:userDataType = {...userData};
+            tempUserData.username = user.user.displayName || "no name";
+            tempUserData.photoURL = user.user.photoURL || "";
+            dLogin(tempUserData);
+            db.collection("users").doc(user.user.uid).set(tempUserData);
+          }
+        }
       })
-      .catch(error => {
-        alert(error);
-      });  
     }
-  }, [ user ]);
+  }, [ user, dLogin ])
 
   const doLogout = () => {
     firebase.auth().signOut()
@@ -90,48 +102,48 @@ const ToolBar:FC<{
     })
   }
 
-  if (user) {
+  if (!user.logedIn) {
     return (
       <div className={ classes.container }>
-        <a href="/">
+        <a className={ classes.titlelink } href="/">
           <h1 className={ classes.title }>
             ToDo App
           </h1>
         </a>
         <div className={ classes.btnBox }>
-          <img className={ classes.userPhoto } src={ userData.photoURL } alt="user"/>
-          <p className={ classes.uname }>{ userData.username }</p> 
           <Button
             className={ classes.btn }
-            onClick={ doLogout }
+            href="/signin"
             color="primary"
             variant="contained"
-          >サインアウト</Button>
+          >サインイン</Button>
+          <Button
+            className={ classes.btn }
+            href="/signup"
+            color="primary"
+            variant="contained"
+          >サインアップ</Button>
         </div>
       </div>
     );
   }
-
+  
   return (
     <div className={ classes.container }>
-      <a href="/">
+      <a className={ classes.titlelink } href="/">
         <h1 className={ classes.title }>
           ToDo App
         </h1>
       </a>
       <div className={ classes.btnBox }>
+        <img className={ classes.userPhoto } src={ userData.photoURL } alt="user"/>
+        <p className={ classes.uname }>{ userData.username }</p> 
         <Button
           className={ classes.btn }
-          href="/signin"
+          onClick={ doLogout }
           color="primary"
           variant="contained"
-        >サインイン</Button>
-        <Button
-          className={ classes.btn }
-          href="/signup"
-          color="primary"
-          variant="contained"
-        >サインアップ</Button>
+        >サインアウト</Button>
       </div>
     </div>
   );
@@ -146,7 +158,7 @@ const mapStateToProps = (state: any) => {
 
 const mapDispatchToProps = (dispatch: Function) => {
   return {
-    login: (user: any) => dispatch(login(user)),
+    login: (user: firebase.User) => dispatch(login(user)),
     logout: () => dispatch(logout()),
     dLogin: (userData: userDataType) => dispatch(dLogin(userData)),
     dLogout: () => dispatch(dLogout()),
